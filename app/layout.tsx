@@ -6,8 +6,8 @@ import ClientRoot from "@/components/ClientRoot"
 const geist = Geist({ subsets: ["latin"], variable: "--font-geist" })
 
 export const metadata: Metadata = {
-  title: "FairWork Protocol",
-  description: "Trustless freelance escrow with AI dispute resolution on Monad",
+  title: "Brief",
+  description: "Trustless freelance escrow with AI dispute resolution on Monad. 0% platform fee.",
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

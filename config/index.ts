@@ -3,7 +3,7 @@ import { monadTestnet } from 'wagmi/chains'
 import { http } from 'wagmi'
 
 export const config = getDefaultConfig({
-  appName: 'FairWork Protocol',
+  appName: 'Brief',
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? 'fallback',
   chains: [monadTestnet],
   transports: {
