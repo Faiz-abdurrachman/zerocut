@@ -54,6 +54,10 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
     submittedAt: bigint
   }
 
+  const descParts = j.description.split('\n\n')
+  const jobTitle = descParts.length > 1 ? descParts[0] : null
+  const jobBody = descParts.length > 1 ? descParts.slice(1).join('\n\n') : j.description
+
   const isClient = !!address && j.client.toLowerCase() === address.toLowerCase()
   const hasFreelancer = j.freelancer !== '0x0000000000000000000000000000000000000000'
   const isFreelancer = !!address && hasFreelancer && j.freelancer.toLowerCase() === address.toLowerCase()
@@ -111,7 +115,10 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
           <p className="text-green-400 font-bold text-2xl">{formatEther(j.amount)} MON</p>
         </div>
 
-        <p className="text-white text-lg leading-relaxed mb-5">{j.description}</p>
+        {jobTitle && (
+          <h2 className="text-white font-bold text-xl mb-2">{jobTitle}</h2>
+        )}
+        <p className="text-gray-300 text-base leading-relaxed mb-5">{jobBody}</p>
 
         <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between">

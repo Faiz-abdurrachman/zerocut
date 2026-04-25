@@ -63,16 +63,22 @@ function JobCard({ jobId }: { jobId: bigint }) {
   if (!job) return null
 
   const j = job as { description: string; amount: bigint; client: string }
+  const parts = j.description.split('\n\n')
+  const title = parts.length > 1 ? parts[0] : j.description.slice(0, 60)
+  const body = parts.length > 1 ? parts.slice(1).join('\n\n') : ''
 
   return (
     <Link href={`/job/${jobId.toString()}`}>
       <div className="bg-gray-900 border border-gray-800 hover:border-purple-500/50 rounded-2xl p-6 transition-colors cursor-pointer group">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <p className="text-white font-medium text-lg leading-snug line-clamp-2 group-hover:text-purple-300 transition-colors">
-              {j.description}
+            <p className="text-white font-semibold text-lg leading-snug group-hover:text-purple-300 transition-colors truncate">
+              {title}
             </p>
-            <p className="text-gray-500 text-sm mt-2 truncate">
+            {body && (
+              <p className="text-gray-500 text-sm mt-1 line-clamp-2">{body}</p>
+            )}
+            <p className="text-gray-600 text-sm mt-2 truncate">
               Client: {j.client.slice(0, 6)}...{j.client.slice(-4)}
             </p>
           </div>

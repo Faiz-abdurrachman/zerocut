@@ -44,9 +44,9 @@ export default function CreatePage() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Unknown error'
       if (msg.includes('429') || msg.includes('quota')) {
-        alert('Gemini API quota habis. Buat API key baru di aistudio.google.com/apikey pakai project baru.')
+        alert('Gemini API quota exceeded. Get a new key at aistudio.google.com/apikey.')
       } else {
-        alert('Gagal generate: ' + msg)
+        alert('Failed to generate: ' + msg)
       }
     } finally {
       setGenerating(false)
@@ -56,13 +56,16 @@ export default function CreatePage() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!description.trim() || !amount) return
+    const fullDescription = generatedTitle
+      ? `${generatedTitle}\n\n${description}`
+      : description
     writeContract({
       address: CONTRACT_ADDRESS,
       abi: ABI,
       functionName: 'createJob',
-      args: [description],
+      args: [fullDescription],
       value: parseEther(amount),
-      gas: 500_000n, // explicit gas limit — Monad charges on limit, not used
+      gas: 500_000n,
     })
   }
 
@@ -172,7 +175,7 @@ export default function CreatePage() {
           disabled={isPending || isConfirming || !description.trim()}
           className="w-full py-4 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
         >
-          {isPending ? '⏳ Cek MetaMask di pojok kanan atas browser...' : isConfirming ? 'Locking funds on Monad...' : `Post Job & Lock ${amount} MON`}
+          {isPending ? '⏳ Confirm in MetaMask...' : isConfirming ? '⛓ Locking funds on Monad...' : `Post Job & Lock ${amount} MON`}
         </button>
 
         {writeError && (
