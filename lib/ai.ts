@@ -7,7 +7,10 @@ export type GeneratedJob = {
   title: string
   description: string
   suggestedPriceEth: string
+  category: string
+  skills: string[]
   deliverables: string[]
+  revisions: string
 }
 
 export type DisputeVerdict = {
@@ -25,9 +28,12 @@ User idea: "${prompt}"
 Respond ONLY with a JSON object, no markdown, no explanation:
 {
   "title": "short job title (max 60 chars)",
-  "description": "clear job description (2-3 sentences, what is needed, what will be delivered)",
-  "suggestedPriceEth": "suggested price in ETH as string (e.g. '0.01' for small tasks, '0.1' for bigger ones)",
-  "deliverables": ["deliverable 1", "deliverable 2", "deliverable 3"]
+  "description": "clear 2-3 sentence job description — what is needed and what counts as done",
+  "suggestedPriceEth": "suggested price as string (e.g. '0.01' for small, '0.05' for medium, '0.1' for large)",
+  "category": "one of: Design, Development, Writing, Marketing, Other",
+  "skills": ["skill1", "skill2", "skill3"],
+  "deliverables": ["specific deliverable 1", "specific deliverable 2", "specific deliverable 3"],
+  "revisions": "1 or 2 or 3 or Unlimited"
 }
 `)
 

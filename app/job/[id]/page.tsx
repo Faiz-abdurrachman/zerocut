@@ -4,6 +4,7 @@ import { use, useState, useEffect } from 'react'
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { formatEther } from 'viem'
 import { ABI, CONTRACT_ADDRESS, JobStatus, DisputeOutcome } from '@/lib/contract'
+import { parseJob } from '@/lib/parseJob'
 import JobStatusBadge from '@/components/JobStatusBadge'
 import Link from 'next/link'
 
@@ -54,9 +55,7 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
     submittedAt: bigint
   }
 
-  const descParts = j.description.split('\n\n')
-  const jobTitle = descParts.length > 1 ? descParts[0] : null
-  const jobBody = descParts.length > 1 ? descParts.slice(1).join('\n\n') : j.description
+  const parsed = parseJob(j.description)
 
   const isClient = !!address && j.client.toLowerCase() === address.toLowerCase()
   const hasFreelancer = j.freelancer !== '0x0000000000000000000000000000000000000000'
@@ -111,14 +110,57 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
       {/* Job Info Card */}
       <div className="bg-gray-900 border border-gray-800 rounded-2xl p-6 mb-4">
         <div className="flex items-start justify-between gap-4 mb-4">
-          <JobStatusBadge status={j.status} />
-          <p className="text-green-400 font-bold text-2xl">{formatEther(j.amount)} MON</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <JobStatusBadge status={j.status} />
+            {parsed.category && (
+              <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/20">
+                {parsed.category}
+              </span>
+            )}
+          </div>
+          <p className="text-green-400 font-bold text-2xl shrink-0">{formatEther(j.amount)} MON</p>
         </div>
 
-        {jobTitle && (
-          <h2 className="text-white font-bold text-xl mb-2">{jobTitle}</h2>
+        <h2 className="text-white font-bold text-xl mb-2">{parsed.title || `Job #${id}`}</h2>
+        <p className="text-gray-300 text-base leading-relaxed mb-5">{parsed.body}</p>
+
+        {parsed.skills.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {parsed.skills.map(s => (
+              <span key={s} className="text-xs px-2.5 py-1 bg-gray-800 text-gray-400 rounded-md">{s}</span>
+            ))}
+          </div>
         )}
-        <p className="text-gray-300 text-base leading-relaxed mb-5">{jobBody}</p>
+
+        {parsed.deliverables.length > 0 && (
+          <div className="mb-4 bg-gray-800/50 rounded-xl p-4">
+            <p className="text-xs text-gray-500 font-medium mb-2 uppercase tracking-wider">Deliverables</p>
+            <ul className="space-y-1">
+              {parsed.deliverables.map((d, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                  <span className="text-green-400 mt-0.5">✓</span> {d}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {(parsed.deadline || parsed.revisions) && (
+          <div className="flex gap-6 mb-4 text-sm">
+            {parsed.deadline && (
+              <div>
+                <span className="text-gray-500 text-xs">Deadline</span>
+                <p className="text-gray-300">{parsed.deadline}</p>
+              </div>
+            )}
+            {parsed.revisions && (
+              <div>
+                <span className="text-gray-500 text-xs">Revisions</span>
+                <p className="text-gray-300">{parsed.revisions}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="space-y-2 text-sm">
           <div className="flex items-center justify-between">
@@ -189,7 +231,7 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
             disabled={isPending || isConfirming}
             className="w-full py-3 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
           >
-            {isPending ? '⏳ Cek MetaMask...' : isConfirming ? 'Processing...' : 'Accept Job'}
+            {isPending ? '⏳ Confirm in MetaMask...' : isConfirming ? 'Processing...' : 'Accept Job'}
           </button>
           {writeError && <p className="text-red-400 text-xs mt-2">{writeError.message.slice(0, 100)}</p>}
         </div>
@@ -214,7 +256,7 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
             disabled={isPending || isConfirming || !workUrl.trim()}
             className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
           >
-            {isPending ? '⏳ Cek MetaMask...' : isConfirming ? 'Submitting...' : 'Submit Work'}
+            {isPending ? '⏳ Confirm in MetaMask...' : isConfirming ? 'Submitting...' : 'Submit Work'}
           </button>
           {writeError && <p className="text-red-400 text-xs mt-2">{writeError.message.slice(0, 100)}</p>}
         </div>
@@ -241,7 +283,7 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
             disabled={isPending || isConfirming}
             className="w-full py-3 bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
           >
-            {isPending ? '⏳ Cek MetaMask...' : isConfirming ? 'Releasing funds...' : `✅ Approve & Release ${formatEther(j.amount)} MON`}
+            {isPending ? '⏳ Confirm in MetaMask...' : isConfirming ? 'Releasing funds...' : `✅ Approve & Release ${formatEther(j.amount)} MON`}
           </button>
           {writeError && <p className="text-red-400 text-xs mt-2">{writeError.message.slice(0, 100)}</p>}
         </div>
@@ -261,7 +303,7 @@ export default function JobPage({ params }: { params: Promise<{ id: string }> })
                 disabled={isPending || isConfirming}
                 className="w-full py-3 bg-orange-600 hover:bg-orange-500 disabled:opacity-50 text-white font-semibold rounded-xl transition-colors"
               >
-                {isPending ? '⏳ Cek MetaMask...' : isConfirming ? 'Processing...' : '⚡ Trigger Dispute'}
+                {isPending ? '⏳ Confirm in MetaMask...' : isConfirming ? 'Processing...' : '⚡ Trigger Dispute'}
               </button>
             </>
           ) : (

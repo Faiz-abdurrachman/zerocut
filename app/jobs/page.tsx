@@ -4,13 +4,14 @@ import { useReadContract } from 'wagmi'
 import { ABI, CONTRACT_ADDRESS } from '@/lib/contract'
 import Link from 'next/link'
 import { formatEther } from 'viem'
+import { parseJob } from '@/lib/parseJob'
 
 export default function JobsPage() {
   const { data: jobIds, isLoading } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: ABI,
     functionName: 'getJobsByStatus',
-    args: [0], // OPEN = 0
+    args: [0],
     query: { refetchInterval: 5000 },
   })
 
@@ -29,9 +30,7 @@ export default function JobsPage() {
         </Link>
       </div>
 
-      {isLoading && (
-        <div className="text-center py-20 text-gray-500">Loading jobs...</div>
-      )}
+      {isLoading && <div className="text-center py-20 text-gray-500">Loading jobs...</div>}
 
       {!isLoading && (!jobIds || (jobIds as bigint[]).length === 0) && (
         <div className="text-center py-20">
@@ -63,34 +62,64 @@ function JobCard({ jobId }: { jobId: bigint }) {
   if (!job) return null
 
   const j = job as { description: string; amount: bigint; client: string }
-  const parts = j.description.split('\n\n')
-  const title = parts.length > 1 ? parts[0] : j.description.slice(0, 60)
-  const body = parts.length > 1 ? parts.slice(1).join('\n\n') : ''
+  const parsed = parseJob(j.description)
 
   return (
     <Link href={`/job/${jobId.toString()}`}>
       <div className="bg-gray-900 border border-gray-800 hover:border-purple-500/50 rounded-2xl p-6 transition-colors cursor-pointer group">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <p className="text-white font-semibold text-lg leading-snug group-hover:text-purple-300 transition-colors truncate">
-              {title}
-            </p>
-            {body && (
-              <p className="text-gray-500 text-sm mt-1 line-clamp-2">{body}</p>
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <p className="text-white font-semibold text-lg leading-snug group-hover:text-purple-300 transition-colors truncate">
+                {parsed.title || j.description.slice(0, 60)}
+              </p>
+              {parsed.category && (
+                <span className="shrink-0 text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/20">
+                  {parsed.category}
+                </span>
+              )}
+            </div>
+
+            {parsed.body && (
+              <p className="text-gray-500 text-sm mt-1 line-clamp-2">{parsed.body}</p>
             )}
-            <p className="text-gray-600 text-sm mt-2 truncate">
-              Client: {j.client.slice(0, 6)}...{j.client.slice(-4)}
-            </p>
+
+            {parsed.skills.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {parsed.skills.slice(0, 4).map(s => (
+                  <span key={s} className="text-xs px-2 py-0.5 bg-gray-800 text-gray-400 rounded-md">
+                    {s}
+                  </span>
+                ))}
+                {parsed.skills.length > 4 && (
+                  <span className="text-xs text-gray-600">+{parsed.skills.length - 4} more</span>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-center gap-4 mt-3">
+              <p className="text-gray-600 text-xs truncate">
+                Client: {j.client.slice(0, 6)}...{j.client.slice(-4)}
+              </p>
+              {parsed.deadline && (
+                <p className="text-gray-600 text-xs">Due: {parsed.deadline}</p>
+              )}
+              {parsed.revisions && (
+                <p className="text-gray-600 text-xs">{parsed.revisions} revision{parsed.revisions === '1' ? '' : 's'}</p>
+              )}
+            </div>
           </div>
+
           <div className="text-right shrink-0">
             <p className="text-green-400 font-bold text-xl">{formatEther(j.amount)} MON</p>
             <p className="text-xs text-gray-500 mt-1">locked in escrow</p>
           </div>
         </div>
+
         <div className="mt-4 flex items-center justify-between">
-          <span className="text-xs text-gray-500">Job #{jobId.toString()}</span>
+          <span className="text-xs text-gray-600">Job #{jobId.toString()}</span>
           <span className="text-sm text-purple-400 group-hover:text-purple-300">
-            Accept job →
+            View & Accept →
           </span>
         </div>
       </div>

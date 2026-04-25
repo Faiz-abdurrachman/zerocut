@@ -3,17 +3,29 @@ import { generateJobDescription } from '@/lib/ai'
 
 // Fallback kalau Gemini quota habis — generate dari prompt secara lokal
 function generateMockJob(prompt: string) {
-  const words = prompt.trim()
-  const title = words.charAt(0).toUpperCase() + words.slice(1)
+  const title = prompt.trim().charAt(0).toUpperCase() + prompt.trim().slice(1)
+  const lc = prompt.toLowerCase()
+  const category = lc.includes('design') || lc.includes('logo') || lc.includes('ui') || lc.includes('figma')
+    ? 'Design'
+    : lc.includes('web') || lc.includes('app') || lc.includes('code') || lc.includes('develop')
+    ? 'Development'
+    : lc.includes('write') || lc.includes('blog') || lc.includes('content') || lc.includes('copy')
+    ? 'Writing'
+    : lc.includes('market') || lc.includes('social') || lc.includes('ads')
+    ? 'Marketing'
+    : 'Other'
   return {
-    title: title,
-    description: `${title}. The freelancer must deliver high-quality work that matches this brief exactly. Clear communication and revisions included. Final files must be submitted in the agreed format before the deadline.`,
+    title,
+    description: `${title}. The freelancer must deliver high-quality work that exactly matches this brief. Clear communication is expected throughout the project, with final files submitted in the agreed format.`,
     suggestedPriceEth: '0.01',
+    category,
+    skills: ['Communication', 'Attention to Detail'],
     deliverables: [
       'Final deliverable in required format',
       'Source files included',
-      'Up to 2 revision rounds',
+      'Revision rounds as agreed',
     ],
+    revisions: '2',
     _mock: true,
   }
 }
